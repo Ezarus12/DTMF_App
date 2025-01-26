@@ -1,8 +1,9 @@
 import wave
 import numpy
 import sounddevice
+from PyQt5 import QtCore
 from PyQt5.QtCore import QFile, Qt
-from PyQt5.QtWidgets import QMainWindow, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QGridLayout, QSizePolicy, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QGridLayout, QSizePolicy, QFileDialog, QMessageBox, QSlider
 from PyQt5.QtGui import QFont
 
 from constants import DTMF_FREQUENCIES, SCREEN_HEIGHT, SCREEN_WIDTH
@@ -24,6 +25,13 @@ class DtmfWindow(QMainWindow):
 
         # Create the layout and widgets
         self.create_widgets()
+
+        self.spaceSlider.valueChanged.connect(lambda value: self.update_label(self.spaceSliderNum, value))
+        self.durationSlider.valueChanged.connect(lambda value: self.update_label(self.durationSliderNum, value))
+
+    def update_label(self, label_widget, value):
+        value = value/10
+        label_widget.setText(str(value) + " s")
 
     def load_stylesheet(self):
         """
@@ -54,8 +62,58 @@ class DtmfWindow(QMainWindow):
         self.create_dtmf_buttons(left_layout)
 
         # Right layout for displaying code and saving
+
         right_widget = QWidget(self)
         right_layout = QVBoxLayout(right_widget)
+
+        #Space slider
+        self.spaceSlider = QSlider(Qt.Horizontal, right_widget)
+        self.spaceSlider.setGeometry(QtCore.QRect(30, 520, 331, 51))
+        self.spaceSlider.setMinimum(1)
+        self.spaceSlider.setMaximum(10)
+        self.spaceSlider.setTickInterval(1)
+        self.spaceSlider.setValue(5)
+        self.spaceSlider.setFixedHeight(160)
+        self.spaceSlider.setStyleSheet(str(self.stylesheet, encoding='utf-8'))
+
+        #Space slider name
+        self.spaceSliderName = QLabel(right_widget)
+        self.spaceSliderName.setGeometry(QtCore.QRect(30, 430, 351, 61))
+        self.spaceSliderName.setText("Spacing between tones:")
+        self.spaceSliderName.setStyleSheet(str(self.stylesheet, encoding='utf-8'))
+        self.spaceSliderName.setStyleSheet("font-size: 36px; color: white;")
+
+        #Space slider num
+        self.spaceSliderNum = QLabel(right_widget)
+        self.spaceSliderNum.setGeometry(QtCore.QRect(120, 580, 141, 61))
+        self.spaceSliderNum.setText("0.5 s")
+        self.spaceSliderNum.setStyleSheet(str(self.stylesheet, encoding='utf-8'))
+        self.spaceSliderNum.setStyleSheet("font-size: 36px; color: white;")
+
+        #Duration slider
+        self.durationSlider = QSlider(Qt.Horizontal, right_widget)
+        self.durationSlider.setGeometry(QtCore.QRect(30, 520, 331, 51))
+        self.durationSlider.setMinimum(1)
+        self.durationSlider.setMaximum(10)
+        self.durationSlider.setTickInterval(1)
+        self.durationSlider.setValue(5)
+        self.durationSlider.setFixedHeight(160)
+        self.durationSlider.setStyleSheet(str(self.stylesheet, encoding='utf-8'))
+
+        #duration slider name
+        self.durationSliderName = QLabel(right_widget)
+        self.durationSliderName.setGeometry(QtCore.QRect(30, 430, 351, 61))
+        self.durationSliderName.setText("Tone duration:")
+        self.durationSliderName.setStyleSheet(str(self.stylesheet, encoding='utf-8'))
+        self.durationSliderName.setStyleSheet("font-size: 36px; color: white;")
+
+        #duration slider num
+        self.durationSliderNum = QLabel(right_widget)
+        self.durationSliderNum.setGeometry(QtCore.QRect(120, 580, 141, 61))
+        self.durationSliderNum.setText("0.5 s")
+        self.durationSliderNum.setStyleSheet(str(self.stylesheet, encoding='utf-8'))
+        self.durationSliderNum.setStyleSheet("font-size: 36px; color: white;")
+
         self.text_display = QLabel("DTMF code: ", self)
         self.text_display.setFont(QFont("Roboto", 32))
         self.text_display.setStyleSheet("color: white")
@@ -66,6 +124,13 @@ class DtmfWindow(QMainWindow):
         self.save_button.setFixedHeight(160)
         self.save_button.clicked.connect(self.save_string)
 
+        
+        right_layout.addWidget(self.durationSliderName)
+        right_layout.addWidget(self.durationSlider)
+        right_layout.addWidget(self.durationSliderNum)
+        right_layout.addWidget(self.spaceSliderName)
+        right_layout.addWidget(self.spaceSlider)
+        right_layout.addWidget(self.spaceSliderNum)
         right_layout.addWidget(self.text_display)
         right_layout.addWidget(self.save_button)
 
@@ -122,7 +187,7 @@ class DtmfWindow(QMainWindow):
         tone = 0.5 * numpy.sin(2 * numpy.pi * freq_low * t) + 0.5 * numpy.sin(2 * numpy.pi * freq_high * t)
         sounddevice.play(tone, samplerate=sample_rate)
 
-    def generate_dtmf_sequence(self, sequence, duration=0.5, pause=0.1, sample_rate=44100):
+    def generate_dtmf_sequence(self, sequence, sample_rate=44100):
         """
         Method generates sequence of DTMF tones base on given sequence
 
@@ -135,9 +200,9 @@ class DtmfWindow(QMainWindow):
         for key in sequence:
             if key in DTMF_FREQUENCIES:
                 freq_low, freq_high = DTMF_FREQUENCIES[key]
-                t = numpy.linspace(0, duration, int(sample_rate * duration), endpoint=False)
+                t = numpy.linspace(0, self.durationSlider.value()/10, int(sample_rate * self.durationSlider.value()/10), endpoint=False)
                 tone = 0.5 * numpy.sin(2 * numpy.pi * freq_low * t) + 0.5 * numpy.sin(2 * numpy.pi * freq_high * t)
-                result = numpy.concatenate((result, tone, numpy.zeros(int(sample_rate * pause))))
+                result = numpy.concatenate((result, tone, numpy.zeros(int(sample_rate * (self.spaceSlider.value()/10)))))
         return result
 
     def update_text_display(self, text):

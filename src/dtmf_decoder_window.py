@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QLabel, QPushButton, QVBoxLayo
 from constants import DTMF_FREQUENCIES, SCREEN_WIDTH, SCREEN_HEIGHT
 import wave
 import numpy
+import time
 from scipy.signal import find_peaks
 
 class DtmfDecodeWindow(QMainWindow):
@@ -89,8 +90,8 @@ class DtmfDecodeWindow(QMainWindow):
         """
         for key, (dtmf_low, dtmf_high) in DTMF_FREQUENCIES.items():
             if (
-                abs(low_freq - dtmf_low) <= 10 and  # Porównanie częstotliwości
-                abs(high_freq - dtmf_high) <= 10    # Porównanie częstotliwości
+                abs(low_freq - dtmf_low) <= 10 and  
+                abs(high_freq - dtmf_high) <= 10   
             ):
                 return key
         return "?"
@@ -105,8 +106,6 @@ class DtmfDecodeWindow(QMainWindow):
         """
         with wave.open(file_path, "rb") as wav_file:
             #getting data from the wave_file
-            n_channels = wav_file.getnchannels()
-            sampwidth = wav_file.getsampwidth()
             framerate = wav_file.getframerate()
             n_frames = wav_file.getnframes()
 
@@ -114,8 +113,19 @@ class DtmfDecodeWindow(QMainWindow):
             raw_data = wav_file.readframes(n_frames)
             data_table = numpy.frombuffer(raw_data, dtype=numpy.int16)
 
+            chunk_size = int(framerate * 0.1)
+
+            chunk_duration_time = 0
+
+            for i in range(0, len(data_table), chunk_size):
+                chunk = data_table[i:i + chunk_size]
+                if all(x == 0 for x in chunk):
+                    chunk_duration_time = i/chunk_size*0.1
+                    break
+
+            #print(chunk_duration_time)
             #setting chunksize to 0.6s
-            chunk_size = int(framerate * 0.6)
+            chunk_size = int(framerate * chunk_duration_time)
             dtmf_sequence = []
 
             #checking every chunk of the sequence
