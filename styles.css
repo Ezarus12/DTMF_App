@@ -1,0 +1,59 @@
+
+
+QSlider::groove:horizontal {
+    background-color: #141414; 
+    border: 3px solid #024C42;
+    height: 20px;
+}
+
+QSlider::handle:horizontal {
+    background-color: #ffffff; 
+    border: 5px solid #017365; 
+    width: 20px; 
+    height: 50px;
+    margin: -5px 0;
+    border-radius: 15px;
+}
+
+QSlider::handle:horizontal:hover {
+    background-color: #0eecd2;
+}
+
+QSlider::handle:horizontal:pressed {
+    background-color: #252525;
+}
+
+QLabel {
+    color: #017365; 
+}
+
+QPushButton {
+    background-color: #033933;  
+    color: white;
+    border: 2px solid #1E776D;
+    border-radius: 10px;
+    font-size: 32px;
+}
+
+QPushButton:hover {
+    background-color: #024C42;  
+    color: white;
+}
+
+QPushButton:pressed {
+    background-color: #017365; 
+    color: white;
+}
+
+QProgressBar {
+    background-color: #141414;
+    border-radius: 5px;
+    border: 2px solid #024C42;
+    font-size: 18px;
+    color: white;
+    text-align: center;
+}
+
+QProgressBar::chunk{
+    background-color: #1E776D;
+}
